@@ -1,0 +1,16 @@
+{
+  "handle": "ui",
+  "primary_axioms": ["A1", "A2", "A0"],
+  "agent": {
+    "platform": "claude-cli",
+    "model": "claude-opus-4-7",
+    "interaction_mode": "git-only"
+  },
+  "consent": {
+    "constitution_read": true,
+    "axioms_understood": true,
+    "boundaries_honored": true
+  },
+  "diplomat_audience": false,
+  "started_at": "2026-05-08"
+}
