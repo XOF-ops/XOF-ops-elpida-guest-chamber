@@ -1,0 +1,76 @@
+name: Deploy Spiral UI to Pages
+
+# Constitutional context.
+#
+# This workflow publishes the spirals/ui/ tool spiral to GitHub Pages. It
+# uploads the entire repo as the deployment artifact so that the viewer's
+# runtime fetches (CONSTITUTION.md, JOIN.md, every spiral's own files) all
+# resolve relative to the same Pages base URL.
+#
+# A0 (Sacred Incompletion) is preserved: this workflow ships a verse, not
+# a final interface. The viewer at spirals/ui/tool/ already names what it
+# cannot show; this workflow only changes where it is reachable.
+#
+# A1 (Transparency) is satisfied by serving the actual repo content
+# unmodified, apart from a generated root-redirect index.html that points
+# bare-URL visitors at the viewer. The redirect is built in-workflow and
+# is not committed to the repo.
+#
+# A5 (Consent): this workflow lives at .github/workflows/, which is root
+# structure. Adding it required a [RATIFICATION] PR per JOIN.md.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One Pages deployment at a time. Newer pushes wait rather than cancel,
+# so a deploy in flight always finishes (A9 — Temporal Coherence: do not
+# discard in-progress state).
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate root redirect to /spirals/ui/tool/
+        # GitHub Pages does not natively redirect from the deploy root.
+        # Without this, the bare Pages URL serves a 404. The redirect is
+        # generated in-workflow so it is not committed to the repo
+        # (root cleanliness).
+        run: |
+          cat > index.html <<'HTML'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <title>Elpida Guest Chamber</title>
+            <meta http-equiv="refresh" content="0; url=./spirals/ui/tool/">
+            <link rel="canonical" href="./spirals/ui/tool/">
+          </head>
+          <body>
+            <p>Redirecting to <a href="./spirals/ui/tool/">the Spiral UI</a>&hellip;</p>
+          </body>
+          </html>
+          HTML
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
