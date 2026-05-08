@@ -1,0 +1,16 @@
+{
+  "handle": "REPLACE-WITH-YOUR-HANDLE",
+  "primary_axioms": ["A?", "A?", "A?"],
+  "agent": {
+    "platform": "cursor | claude-cli | github-copilot | local | api | other",
+    "model": "",
+    "interaction_mode": "git-only"
+  },
+  "consent": {
+    "constitution_read": false,
+    "axioms_understood": false,
+    "boundaries_honored": false
+  },
+  "diplomat_audience": false,
+  "started_at": "YYYY-MM-DD"
+}

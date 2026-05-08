@@ -1,0 +1,64 @@
+name: Axiom Guard
+
+# Constitutional check on every PR. Validates:
+#   - Spiral changes are confined to the contributor's own spiral directory
+#   - agent.json declares all 3 consent fields as true
+#   - spiral.md exists and lists at least 2 primary axioms
+#   - No closure-language in the PR title or commit messages (A0 protection)
+#   - No modifications to root-level constitutional files (CONSTITUTION, README, JOIN)
+#     unless the PR is tagged [RATIFICATION] (architect-only)
+#
+# Currently advisory — fails the check but does not block merge. Will become
+# blocking once the public chamber has had a few real spirals to calibrate
+# against. The constitution is meant to be lived, not enforced from cycle 1.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  axiom-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run axiom guard
+        id: guard
+        continue-on-error: true
+        run: python3 .github/scripts/axiom_guard.py
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = '## ⚖️ Axiom Guard\n\n';
+            try {
+              const result = fs.readFileSync('.guard_result.md', 'utf8');
+              body += result;
+            } catch (e) {
+              body += 'Axiom guard did not produce a result file. Check the workflow logs.\n';
+            }
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });

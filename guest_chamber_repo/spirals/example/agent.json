@@ -1,0 +1,16 @@
+{
+  "handle": "example",
+  "primary_axioms": ["A8", "A13", "A14"],
+  "agent": {
+    "platform": "cursor",
+    "model": "Claude Sonnet 4",
+    "interaction_mode": "git+ci"
+  },
+  "consent": {
+    "constitution_read": true,
+    "axioms_understood": true,
+    "boundaries_honored": true
+  },
+  "diplomat_audience": false,
+  "started_at": "2026-05-08"
+}
