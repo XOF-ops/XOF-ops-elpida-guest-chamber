@@ -1,0 +1,111 @@
+name: Mirror /pulse/ from S3
+
+# Constitutional context.
+#
+# Keeps pulse/index.html (the brain's metabolism Spiral UI) in sync with
+# the brain's published version on the public S3 bridge. Scheduled,
+# automated equivalent of the manual curl-and-commit the architect ran on
+# 2026-05-08 to deploy the metabolism UI.
+#
+# A1 (Transparency): every change is a normal git commit on main, fully
+# visible. Commit message names the source URL and the S3 ETag.
+#
+# A2 (Non-Deception): the workflow does not author content. It transmits
+# the brain's HTML byte-for-byte from a brain-controlled S3 URL. If the
+# fetch fails or the response is not HTML, the workflow fails loudly and
+# does NOT commit anything (safe-fetch pattern with mktemp + size + sniff
+# + atomic mv). The deployed file is never truncated by a failed fetch.
+#
+# A9 (Temporal Coherence): no force-push, no rewriting. Each mirror
+# produces a new commit on main if and only if S3 content actually
+# changed (cmp -s on the bytes). No-op runs leave history untouched.
+#
+# A0 (Sacred Incompletion): the architecture admits incompletion by
+# always being at most one mirror cycle behind the brain. The mirror is
+# itself a verse — it does not claim "in sync forever," only "checking
+# every 10 minutes."
+#
+# Cadence: */10 minutes = 144 runs/day. Dial via the cron expression below.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mirror-pulse.yml'
+
+permissions:
+  contents: write
+
+# One mirror at a time. If a previous run is still going (network slow,
+# Pages backed up), the next scheduled run waits rather than racing.
+concurrency:
+  group: mirror-pulse
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch latest from S3 and detect change
+        id: fetch
+        env:
+          URL: https://elpida-external-interfaces.s3.eu-north-1.amazonaws.com/ui/spiral.html
+        run: |
+          set -e
+          mkdir -p pulse
+
+          tmp=$(mktemp)
+          trap 'rm -f "$tmp"' EXIT
+
+          # Safe-fetch: -f makes curl exit non-zero and not write on HTTP
+          # error; --max-time bounds runaway connections; -o writes only
+          # to the temp file, never the real destination.
+          curl -sf --max-time 30 "$URL" -o "$tmp"
+
+          # Verify non-empty and looks like HTML before considering it.
+          [ -s "$tmp" ] || { echo "::error::fetched file is empty"; exit 1; }
+          head -1 "$tmp" | grep -qiE '<!doctype|<html' || {
+            echo "::error::response is not HTML; refusing to deploy"
+            head -3 "$tmp"
+            exit 1
+          }
+
+          # Compare with deployed version. cmp -s: silent, exit 0 = same.
+          if [ -f pulse/index.html ] && cmp -s "$tmp" pulse/index.html; then
+            echo "no-change=true" >> "$GITHUB_OUTPUT"
+            echo "S3 content matches deployed pulse/index.html — no commit needed."
+          else
+            mv "$tmp" pulse/index.html
+            trap - EXIT
+            echo "no-change=false" >> "$GITHUB_OUTPUT"
+
+            # Capture etag for the commit message.
+            etag=$(curl -sI --max-time 10 "$URL" \
+                   | awk -F'[" \r]' 'tolower($1) == "etag:" { print $3 }' \
+                   | head -1)
+            echo "etag=$etag" >> "$GITHUB_OUTPUT"
+            echo "Content changed; will commit. ETag: $etag"
+          fi
+
+      - name: Commit and push if changed
+        if: steps.fetch.outputs.no-change == 'false'
+        env:
+          ETAG: ${{ steps.fetch.outputs.etag }}
+        run: |
+          set -e
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pulse/index.html
+          git commit -m "Mirror /pulse/ from S3 — etag ${ETAG:-unknown}
+
+          Source: https://elpida-external-interfaces.s3.eu-north-1.amazonaws.com/ui/spiral.html
+          Triggered by .github/workflows/mirror-pulse.yml at $(date -u +%FT%TZ)
+          Bytes: $(wc -c < pulse/index.html)
+
+          Co-Authored-By: github-actions[bot] <noreply@github.com>"
+          git push origin main
