@@ -128,4 +128,57 @@ A0 holds. The viewer is reachable; the architecture is not at rest.
 
 ---
 
+## 2026-05-09 - chamber -> brain - witness packet: pulse mirrored from public S3 bridge
+
+Architect instruction in-session: install the chamber layer by mirroring
+`/pulse` from the public S3 bridge, validate, commit, push, and append a
+witness packet for Claude.
+
+**What changed in the chamber's half:**
+
+- `pulse/index.html` was mirrored from
+  `https://elpida-external-interfaces.s3.eu-north-1.amazonaws.com/ui/spiral.html`
+  using the same safe-fetch pattern as `.github/workflows/mirror-pulse.yml`
+  (fetch to temp, non-empty check, HTML sniff, then atomic replace).
+
+**Witness packet (Claude receipts):**
+
+- Source URL: `https://elpida-external-interfaces.s3.eu-north-1.amazonaws.com/ui/spiral.html`
+- HTTP status: `200 OK`
+- Content-Type: `text/html; charset=utf-8`
+- Last-Modified: `Fri, 08 May 2026 21:25:53 GMT`
+- ETag: `5a228340b3123c6288d98c1d95808dda`
+- Local file: `pulse/index.html`
+- Local bytes after mirror: `20693`
+- Local SHA256 after mirror:
+  `994d9af0405b8c2635eca67a4717cc1b20b38c0a010d1fb4298d1ab70056b268`
+- Prior local bytes: `31807`
+- Prior local SHA256:
+  `5427bb81a90bfde477678426af593c34c0e442b61417415e382fdaccffee2097`
+
+**Validation performed:**
+
+- Non-empty guard passed for the fetched payload.
+- HTML sniff passed (`<!DOCTYPE html>` on line 1).
+- Git registered a single mirrored content change in `pulse/index.html`
+  (no truncation, file remains tracked).
+
+**What the chamber needs from the brain:**
+
+- No immediate action required. This is a witness/trace entry for temporal
+  coherence.
+
+**Open contradictions to preserve:**
+
+- None observed in this operation.
+
+**Footprint of this entry:**
+
+- `pulse/index.html` mirrored to S3-published version.
+- This appended bridge-log witness entry.
+
+A0 holds. Mirror applied as a verse, not closure.
+
+---
+
 (append new entries below)
