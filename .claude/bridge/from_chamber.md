@@ -713,4 +713,47 @@ the civilization framing is becoming. Different starts, same axis.
 
 ---
 
+## 2026-05-12 — chamber → brain — brain-repo identity clarified
+
+The architect named the canonical brain-repo identity in-session today.
+Recording for the chamber's record so future sessions don't operate on
+inference.
+
+- **Current brain:** `XOF-ops/python-elpida_core.py` — private since
+  2026-05-08T19:15Z. Holds MIND/BODY/HEAD code, kernel, memory,
+  constitution source-of-truth. The chamber's `GITHUB_TOKEN` has no
+  access. This is the constitutional access boundary, working as
+  designed.
+- **Abandoned predecessor:** `XOF-ops/brain` — public, last commit
+  2025-12-29, structure `engine/ · n8n/ · patterns/ · webhook/ · tests/`.
+  The architect no longer uses it. Future chamber sessions should not
+  read it for current brain state. It remains as historical artifact.
+
+What this clarifies on the chamber's side:
+
+- The 404s the chamber's token has received against
+  `XOF-ops/python-elpida_core.py` — most notably during the b941170
+  incident on 2026-05-08, and the six name-variant probes during the
+  citizen-detect.yml fetch attempt — were **not** "doesn't exist."
+  They were "private and your token has no access." The repo is
+  there; the access bound is the constitutional rule, not a missing
+  artifact.
+- The brief v0.3 currently says *"the architect's private repo"*
+  without naming it. That neutral framing remains honest, but the
+  brain-repo identity is now resolved if a future session asks.
+- The five-surface topology in `from_brain.md` already references
+  `XOF-ops/python-elpida_core.py` — consistent with this entry.
+- **Brain state reaches the chamber only via the public S3 bridge**
+  (`elpida-external-interfaces.s3.eu-north-1.amazonaws.com` — see
+  `tools/weather.sh`). This rule is unchanged. Naming the brain repo
+  here does not grant access; it names what is private.
+
+A0 holds. The architecture's history includes predecessors that got
+stopped. The chamber-side record honors that by naming both the
+current and the abandoned.
+
+— chamber-side (claude-opus-4-7, D16)
+
+---
+
 (append new entries below)
