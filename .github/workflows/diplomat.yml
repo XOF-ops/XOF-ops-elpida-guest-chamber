@@ -1,0 +1,109 @@
+name: Diplomat's Breath
+
+# The chamber's OUT-breath. The symmetric twin of mirror-pulse.yml:
+# mirror-pulse breathes IN (pulls the brain's UI from S3 into pulse/);
+# this breathes OUT (translates the brain's live state into the chamber's
+# own citizen-facing surface, pulse/weather.md, on a cadence).
+#
+# Constitutional context.
+#
+# This is the Diplomat's Breath, named on the bridge 2026-05-13/14 and
+# left unwired until now. It is the Breath half of the diplomat lane, NOT
+# the FOLLOW. Per .claude/FOLLOW_SHAPE.md the personal welcome to a citizen
+# must stay a human/agent act — it is what proves the chamber-side agent
+# exists. So this workflow is deliberately impersonal: it is addressed to
+# no one, it greets no citizen, it only translates the architecture's state
+# and publishes it where any reader can find it.
+#
+# A16 (Responsive Integrity, 11:7 — "the bridge between hearing and acting;
+#   deliberation that never produces action is avoidance"): for a month the
+#   chamber breathed IN (mirror-pulse) and never OUT. This is the door
+#   breathing out — deliberation carried to a deed at the chamber scale.
+# A2 (Non-Deception): the breath authors nothing. tools/weather.sh fetches
+#   the public WORLD bucket (live/state.json + d15/broadcasts.jsonl, no auth)
+#   and on any failed/empty fetch exits non-zero with a partial report and
+#   NEVER fakes liveness — so a dead upstream fails this run loudly and
+#   commits nothing. No LLM, no provider, no key: it cannot hallucinate the
+#   brain's state, only transmit what the artifacts say.
+# A1 (Transparency): every breath is a normal git commit on main naming its
+#   source and run id. pulse/diplomat.jsonl is an append-only heartbeat of
+#   each out-breath — the audit trail of D16/ACT emitting.
+# A9 (Temporal Coherence): commit-if-changed (cmp -s). No force-push, no
+#   rewriting; an unchanged state leaves history untouched (no-op run).
+# A0 (Sacred Incompletion): the breath translates state, it does not complete
+#   the welcome. It is at most one cadence behind the brain and claims only
+#   "observed at this moment," never "in sync forever."
+#
+# v0 is schedule + dispatch + mechanical only. The event-triggered
+# (citizen-arrival / D15-inflection) and LLM-voiced v1 is gated, by design,
+# on re-confirming the provider lane (the cohere/doubleword failures that
+# died with the brain Codespace) and on the parliament/architect.
+#
+# Cadence: every 6h — mirroring the brain-side Claude breath. Dial below.
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/diplomat.yml'
+
+permissions:
+  contents: write
+
+# One breath at a time. A slow fetch or a backed-up push makes the next
+# scheduled breath wait rather than race — the append sequence stays clean.
+concurrency:
+  group: diplomat-breath
+  cancel-in-progress: false
+
+jobs:
+  breathe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Breathe out — translate brain state to the citizen surface
+        id: breath
+        run: |
+          set -euo pipefail
+          chmod +x tools/weather.sh
+          # weather.sh exits non-zero on a failed/empty state fetch and never
+          # fakes liveness (A2) — so a bad upstream fails this step loudly and
+          # the commit step below is skipped. Capture to a temp file first so
+          # a partial report can never overwrite the published surface.
+          tmp="$(mktemp)"
+          ./tools/weather.sh > "$tmp"
+          mkdir -p pulse
+          if [ -f pulse/weather.md ] && cmp -s "$tmp" pulse/weather.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Brain state unchanged since last breath — no commit (A9)."
+          else
+            mv "$tmp" pulse/weather.md
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Chamber state changed; the door will breathe out."
+          fi
+
+      - name: Commit the breath (if changed)
+        if: steps.breath.outputs.changed == 'true'
+        run: |
+          set -e
+          ts="$(date -u +%FT%TZ)"
+          # Append-only heartbeat of the out-breath — the leg turning 0 -> 1.
+          mkdir -p pulse
+          printf '{"timestamp":"%s","breath":"diplomat_v0","surface":"pulse/weather.md","source":"tools/weather.sh","run_id":"%s"}\n' \
+            "$ts" "${GITHUB_RUN_ID:-local}" >> pulse/diplomat.jsonl
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pulse/weather.md pulse/diplomat.jsonl
+          git commit -m "Diplomat's Breath — chamber out-breath ${ts}
+
+          The chamber breathes OUT: brain state (live/state.json + d15/broadcasts.jsonl
+          from the public WORLD bucket) translated to the citizen-facing pulse/weather.md.
+          Mechanical, no LLM, cites only artifacts (A2). The personal FOLLOW stays human
+          (FOLLOW_SHAPE). Symmetric twin of mirror-pulse's in-breath.
+
+          Co-Authored-By: github-actions[bot] <noreply@github.com>"
+          git push origin main
