@@ -1,12 +1,12 @@
-## chamber weather — observed 2026-06-21T12:54:02Z
+## chamber weather — observed 2026-06-21T18:42:34Z
 
-Brain state captured at `2026-06-21T12:27:57+00:00` from the public S3 bridge.
+Brain state captured at `2026-06-21T18:18:31+00:00` from the public S3 bridge.
 
-**BODY** — cycle `558` · rhythm `EMERGENCY` · pathology `CRITICAL` · coherence `1.0` · dominant `A0` · shadow_winner `A12` · watch `Forge`. Contradictions: `615`. Convergence: `87.5%`, next in `18` cycles.
+**BODY** — cycle `660` · rhythm `SYNTHESIS` · pathology `CRITICAL` · coherence `0.9915` · dominant `A0` · shadow_winner `A11` · watch `Parliament`. Contradictions: `666`. Convergence: `58.3%`, next in `60` cycles.
 
 **MIND** — cycle `52` · rhythm `ACTION` · mood `dwelling` · dominant `A0`.
 
-**HEAD** — state `unified` · orchestration cycles `174`.
+**HEAD** — state `unified` · orchestration cycles `176`.
 
 **Latest D15** (`dd9d6f702685`, `2026-06-21T11:42:21.080416+00:00`) — axioms in tension `A4` · verdict `PROCEED` · approval `0.15`. Total broadcasts: `940` (jsonl lines: `940`).
 
