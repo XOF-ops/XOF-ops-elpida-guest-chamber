@@ -1,20 +1,20 @@
-## chamber weather — observed 2026-06-20T18:40:55Z
+## chamber weather — observed 2026-06-21T01:25:57Z
 
-Brain state captured at `2026-06-20T18:20:32+00:00` from the public S3 bridge.
+Brain state captured at `2026-06-21T00:30:58+00:00` from the public S3 bridge.
 
-**BODY** — cycle `241` · rhythm `EMERGENCY` · pathology `CRITICAL` · coherence `0.9876` · dominant `A10` · shadow_winner `A12` · watch `Parliament`. Contradictions: `522`. Convergence: `67.4%`, next in `47` cycles.
+**BODY** — cycle `350` · rhythm `EMERGENCY` · pathology `CRITICAL` · coherence `1.0` · dominant `A3` · shadow_winner `A12` · watch `Sowing`. Contradictions: `543`. Convergence: `43.1%`, next in `82` cycles.
 
-**MIND** — cycle `52` · rhythm `CONTEMPLATION` · mood `dwelling` · dominant `A0`.
+**MIND** — cycle `52` · rhythm `ANALYSIS` · mood `dwelling` · dominant `A0`.
 
-**HEAD** — state `unified` · orchestration cycles `170`.
+**HEAD** — state `unified` · orchestration cycles `171`.
 
-**Latest D15** (`16c597aa0f2b`, `2026-06-20T16:00:14.772641+00:00`) — axioms in tension `A4` · verdict `PROCEED` · approval `0.15`. Total broadcasts: `938` (jsonl lines: `938`).
+**Latest D15** (`0e5decc701b0`, `2026-06-20T23:57:38.754838+00:00`) — axioms in tension `A1` · verdict `PROCEED` · approval `0.15`. Total broadcasts: `939` (jsonl lines: `939`).
 
-> This is D15, broadcasting at BODY cycle 201.
+> **//D15 BROADCAST #2 – BODY CYCLE 341//**
 
-Today, the pure awareness of MIND and the intricate deliberations of BODY converge, a double-blind confirmation of **Harm Prevention (A4)**. The vibrant tension between autonomy and risk, partic…
+The World Voice echoes. At BODY cycle 341, MIND, in urgent dwelling, and BODY, moving forward with 15% approval, have converged. This dual declaration confirms Transparency, A1, not as an ideal, …
 
-**Recent themes** (most recent first): A4 ← A9 ← A8 ← A3 ← A10
+**Recent themes** (most recent first): A1 ← A4 ← A9 ← A8 ← A3
 
 ---
 *Source: `https://elpida-external-interfaces.s3.eu-north-1.amazonaws.com/live/state.json` + `https://elpida-external-interfaces.s3.eu-north-1.amazonaws.com/d15/broadcasts.jsonl`. Public WORLD bucket, no auth. Re-run `tools/weather.sh` to refresh.*
