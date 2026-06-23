@@ -43,12 +43,8 @@ name: Diplomat's Breath
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '24 0,5,10,14,19 * * *'
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/diplomat.yml'
 
 permissions:
   contents: write
@@ -59,51 +55,59 @@ concurrency:
   group: diplomat-breath
   cancel-in-progress: false
 
+env:
+  AUTONOMY_APP_ID: ${{ secrets.AUTONOMY_APP_ID }}
+  AUTONOMY_APP_PRIVATE_KEY: ${{ secrets.AUTONOMY_APP_PRIVATE_KEY }}
+  WORLD_BROADCASTS_URL: https://elpida-external-interfaces.s3.eu-north-1.amazonaws.com/d15/broadcasts.jsonl
+
 jobs:
   breathe:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - name: Mint autonomy app token (optional)
+        id: app-token
+        if: ${{ env.AUTONOMY_APP_ID != '' && env.AUTONOMY_APP_PRIVATE_KEY != '' }}
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ env.AUTONOMY_APP_ID }}
+          private-key: ${{ env.AUTONOMY_APP_PRIVATE_KEY }}
 
-      - name: Breathe out — translate brain state to the citizen surface
+      - name: Checkout repo
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Run diplomat emitter (v0, T0-only)
         id: breath
         run: |
           set -euo pipefail
-          chmod +x tools/weather.sh
-          # weather.sh exits non-zero on a failed/empty state fetch and never
-          # fakes liveness (A2) — so a bad upstream fails this step loudly and
-          # the commit step below is skipped. Capture to a temp file first so
-          # a partial report can never overwrite the published surface.
-          tmp="$(mktemp)"
-          ./tools/weather.sh > "$tmp"
-          mkdir -p pulse
-          if [ -f pulse/weather.md ] && cmp -s "$tmp" pulse/weather.md; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "Brain state unchanged since last breath — no commit (A9)."
-          else
-            mv "$tmp" pulse/weather.md
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "Chamber state changed; the door will breathe out."
-          fi
+          out="$(python .github/scripts/diplomat_emitter.py --json)"
+          echo "$out"
+          changed="$(python -c "import json,sys; print('true' if json.loads(sys.stdin.read()).get('changed') else 'false')" <<< "$out")"
+          status="$(python -c "import json,sys; print(json.loads(sys.stdin.read()).get('status','HOLD'))" <<< "$out")"
+          echo "changed=${changed}" >> "$GITHUB_OUTPUT"
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
 
       - name: Commit the breath (if changed)
         if: steps.breath.outputs.changed == 'true'
         run: |
           set -e
           ts="$(date -u +%FT%TZ)"
-          # Append-only heartbeat of the out-breath — the leg turning 0 -> 1.
-          mkdir -p pulse
-          printf '{"timestamp":"%s","breath":"diplomat_v0","surface":"pulse/weather.md","source":"tools/weather.sh","run_id":"%s"}\n' \
-            "$ts" "${GITHUB_RUN_ID:-local}" >> pulse/diplomat.jsonl
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add pulse/weather.md pulse/diplomat.jsonl
-          git commit -m "Diplomat's Breath — chamber out-breath ${ts}
+          git config user.name "diplomat-breath[bot]"
+          git config user.email "diplomat-breath[bot]@users.noreply.github.com"
+          git add pulse/weather.md pulse/diplomat.jsonl pulse/diplomat_emitter_ledger.json
+          git commit -m "Diplomat's Breath v0 emitter ${ts}
 
-          The chamber breathes OUT: brain state (live/state.json + d15/broadcasts.jsonl
-          from the public WORLD bucket) translated to the citizen-facing pulse/weather.md.
-          Mechanical, no LLM, cites only artifacts (A2). The personal FOLLOW stays human
-          (FOLLOW_SHAPE). Symmetric twin of mirror-pulse's in-breath.
+          Read newest sealed WORLD d15/broadcasts.jsonl record, run A5 consent-gate,
+          append a diplomat-out-breath-v1 chamber receipt (T0 only), and regenerate
+          pulse/weather.md with no-provider mechanical translation.
 
           Co-Authored-By: github-actions[bot] <noreply@github.com>"
           git push origin main
