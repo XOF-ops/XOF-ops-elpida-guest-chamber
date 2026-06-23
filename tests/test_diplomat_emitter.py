@@ -102,6 +102,8 @@ class DiplomatEmitterTests(unittest.TestCase):
             self.assertEqual(len(lines), 1)
             row = json.loads(lines[0])
             self.assertEqual(row["schema"], "diplomat-out-breath-v1")
+            self.assertEqual(row["timestamp"], "2026-06-23T12:00:00Z")
+            self.assertEqual(row["timestamp"], row["emitted_at"])
             self.assertEqual(row["carried_broadcast_id"], "42b9a411117a")
             self.assertEqual(row["consent"]["gate_result"], "EMIT")
             self.assertEqual(row["consent"]["t2_gate_result"], "HOLD")

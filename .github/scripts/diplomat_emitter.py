@@ -351,6 +351,7 @@ def run_emitter(
     record = {
         "kind": "diplomat_out_breath",
         "schema": "diplomat-out-breath-v1",
+        "timestamp": _iso(now),
         "emitted_at": _iso(now),
         "run_id": os.environ.get("GITHUB_RUN_ID", "local"),
         "carried_broadcast_id": carried_id,
