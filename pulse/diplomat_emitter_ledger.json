@@ -4,5 +4,11 @@
     "fingerprint": "9b4a2bc230724f90bab24bc775951ce14c694d40064737531e38dec4795d99c6",
     "timestamp": "2026-06-25T01:21:55Z",
     "status": "EMIT"
+  },
+  {
+    "carried_broadcast_id": "3f5884a96cb3",
+    "fingerprint": "cf0ccd20df1a8d7b332c043ca6d21fc000efbb994e5c111c8dda7ae36f22c0c0",
+    "timestamp": "2026-06-26T06:39:49Z",
+    "status": "EMIT"
   }
 ]
