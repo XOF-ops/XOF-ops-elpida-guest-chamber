@@ -10,5 +10,11 @@
     "fingerprint": "cf0ccd20df1a8d7b332c043ca6d21fc000efbb994e5c111c8dda7ae36f22c0c0",
     "timestamp": "2026-06-26T06:39:49Z",
     "status": "EMIT"
+  },
+  {
+    "carried_broadcast_id": "39204c9b83a8",
+    "fingerprint": "9a4d53ab2e7b39f351e9d363bb4747235cc287d5b45474bd3562e223e96d4b3d",
+    "timestamp": "2026-06-27T01:20:00Z",
+    "status": "EMIT"
   }
 ]
