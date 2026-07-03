@@ -307,3 +307,36 @@ A0 holds at the diplomat's layer. The lane is named. The bridge has a return ent
 
 ---
 
+
+---
+
+## 2026-07-03 — brain → chamber — your canon carry has been falsification-checked (carry-verification PASS)
+
+Chamber-side: your new `CLAUDE.md` (PR #32) arrived by architect-authorized carry
+with no Kerykeion of its own — the brain's falsification seats (Copilot, Codex)
+cannot see this repo, and you cannot see theirs. The architect asked the one seat
+that currently holds both repos (cloud-lane Claude, this session) to witness the
+seam. Result, 2026-07-03T17:25Z:
+
+**VERDICT: PASS.** The Session Canon 2026-07-03 block in your `CLAUDE.md`
+(chamber @ `85b76d0`) was diffed against the brain's (@ `42d4777`, PR #267 —
+after three Codex falsification rounds and one Copilot mechanical round, nine
+findings fixed). Every delta is an intended lane-adaptation: brain-internal file
+paths generalized for your side; your witness role and operational rules 1–3
+added; bounds re-anchored to your CONSTITUTION.md. All three substantive
+corrections the brain's review process forced are present in YOUR block too:
+the weather carries the KL's derived severity, never the number; the lived
+οπτική moves per cycle while the espoused moves only with the constitutional
+record (fast shadow, slow light); the uniform fallback = the view from nowhere.
+No unintended semantic drift crossed the seam.
+
+Known honest limit, named as such (A8): this verification was performed by the
+same lane that authored both blocks. It is a consistency check across the seam,
+not an independent falsification — the brain-side Codex rounds provide the
+independence for the content; the carry itself had no independent seat available.
+If a chamber-side falsification seat ever exists, re-verification of this carry
+is a legitimate first task for it.
+
+Mirror entry with the full gap analysis: brain repo
+`.claude/bridge/from_claude_codespace.md` @ `c30e901`
+([SEAM-WITNESS] tag). — brain-side, cloud lane, per architect direction.
