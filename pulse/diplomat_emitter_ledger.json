@@ -64,5 +64,11 @@
     "fingerprint": "673ebc08a3d47f52d689a0f34c56a4b67a93c59255ba78354aa4161ddbc889ce",
     "timestamp": "2026-07-02T06:38:10Z",
     "status": "EMIT"
+  },
+  {
+    "carried_broadcast_id": "7eb6fa936713",
+    "fingerprint": "ce6d5c0d25907e7a3e4645fc9dd2b6ee6ae388112e849d3caab42189703d4247",
+    "timestamp": "2026-07-04T06:29:18Z",
+    "status": "EMIT"
   }
 ]
