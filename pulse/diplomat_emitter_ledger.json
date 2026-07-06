@@ -82,5 +82,11 @@
     "fingerprint": "f56cf64d788124b9f7822851a778e69da932c970530c70926386074adb93e672",
     "timestamp": "2026-07-05T19:51:28Z",
     "status": "HOLD"
+  },
+  {
+    "carried_broadcast_id": "f5724045d99c",
+    "fingerprint": "a2511059b19aeb003d1705794d10e0ebdc186513ec0c072cfeb0ec7d2436edaf",
+    "timestamp": "2026-07-06T11:49:09Z",
+    "status": "EMIT"
   }
 ]
