@@ -136,5 +136,11 @@
     "fingerprint": "1139bf27e6ce0da14aa9029f2997de6a61e607256d0e7d0b4150c332a1801a73",
     "timestamp": "2026-07-12T14:43:27Z",
     "status": "EMIT"
+  },
+  {
+    "carried_broadcast_id": "6e44833bc1b0",
+    "fingerprint": "389f446f02bc16e1609c6e9a5288e572ec971aec3582f7a80d7e1df5f525ee13",
+    "timestamp": "2026-07-12T19:46:58Z",
+    "status": "EMIT"
   }
 ]
