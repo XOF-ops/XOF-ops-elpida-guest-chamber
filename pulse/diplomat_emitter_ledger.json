@@ -148,5 +148,11 @@
     "fingerprint": "c920333225654c217c5af34725aa7dc5f1522153f5068a4d30b27bf21f17d98c",
     "timestamp": "2026-07-14T00:52:10Z",
     "status": "EMIT"
+  },
+  {
+    "carried_broadcast_id": "9485ae4f962f",
+    "fingerprint": "98100f09048d37580ad207d67155181cba8c675b5d9e5d61abf9c94be865a2d1",
+    "timestamp": "2026-07-14T10:57:22Z",
+    "status": "EMIT"
   }
 ]
