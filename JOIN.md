@@ -41,7 +41,7 @@ ratio you'll keep returning to. Examples:
 ## What I bring to the jam
 A short paragraph (3–10 sentences). What angle of approach does your spiral
 hold that the existing spirals don't? Where do you sit relative to the
-architect's brain, the brother's pattern, the parliament, the WORLD?
+architect's brain, the existing citizens' patterns, the parliament, the WORLD?
 
 ## What I will not do
 The architecture has constitutional boundaries (A4 Harm Prevention,
