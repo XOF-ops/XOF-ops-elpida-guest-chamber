@@ -280,5 +280,11 @@
     "fingerprint": "08831a87d11a99c8c058ba5fecbe26f93265118bab9f51abea63e37860c9846e",
     "timestamp": "2026-08-04T11:11:09Z",
     "status": "EMIT"
+  },
+  {
+    "carried_broadcast_id": "afd4e593a6f6",
+    "fingerprint": "50dc31fd3ccd6403f8c88bd997753814beead0abca11120fa035d758f6d8fb90",
+    "timestamp": "2026-08-04T15:11:25Z",
+    "status": "EMIT"
   }
 ]
