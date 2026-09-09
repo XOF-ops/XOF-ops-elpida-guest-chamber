@@ -24,14 +24,23 @@ name: Axiom Guard
 # should not tolerate.
 #
 # pull_request_target runs in the BASE branch's context with the declared
-# write permissions, so fork-PR comments post correctly. The trade-off:
-# the workflow checks out the PR head SHA, which means a malicious fork PR
-# could in principle modify axiom_guard.py. Mitigations: this is a public
-# repo with no production secrets in env; the token scope is limited to
-# `pull-requests: write` + `contents: read`; the architect remains the
-# human merger on every PR; the guard is currently advisory, not gating.
-# The simpler, more secure split-workflow pattern (guard runs under
-# pull_request, comment posts under workflow_run) is a future refinement.
+# write permissions, so fork-PR comments post correctly.
+#
+# --- 2026-09-09: the checkout no longer names the PR's head SHA ---
+#
+# Every citizen PR is a fork PR, and as of some time after this workflow
+# was written, actions/checkout correctly refuses to check out a fork PR's
+# head inside a pull_request_target job — that is the exact "pwn request"
+# class this file's own comment above already named as a risk. The refusal
+# meant the guard died before running and posted a comment that read as
+# failure to the only citizens it exists to serve (first hit: JadeWarrior's
+# return, PR #41, 2026-09-09). The fix: this job now checks out only its
+# own repository's default content — the script that runs is always the
+# trusted, base-branch version, and a PR can no longer change what checks
+# itself. axiom_guard.py reads the PR's file list and file contents through
+# the read-only GitHub API instead of the working tree, which works
+# identically for same-repo and fork PRs and does not require the PR to be
+# mergeable. See axiom_guard.py's own header for the read path.
 
 on:
   pull_request_target:
@@ -51,14 +60,9 @@ jobs:
   axiom-guard:
     runs-on: ubuntu-latest
     steps:
-      # Check out the PR head so the script can read the PR's spirals/*
-      # files and compute the diff against base. Under pull_request_target,
-      # the default checkout is base; we explicitly request the PR head
-      # because the guard needs to inspect what the PR proposes to land.
+      # Checks out this repository's own default content (the base branch),
+      # never the PR's. axiom_guard.py reads the PR itself via the API.
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -70,6 +74,9 @@ jobs:
         continue-on-error: true
         run: python3 .github/scripts/axiom_guard.py
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_FULL: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
