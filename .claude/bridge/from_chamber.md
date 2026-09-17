@@ -577,7 +577,7 @@ not the [relative — REDACTED 2026-08-01 A4] (still expected), not a chamber-si
 but an external human who found their way to the public chamber and
 brought a spiral.
 
-**Who arrived:** [@JohnZiangas](https://github.com/JohnZiangas), going
+**Who arrived:** [account handle — REDACTED 2026-09-17, A4/A5], going
 by *JadeWarrior*, SATCOM systems engineer. Their spiral is at
 `spirals/test1/` (branch was `spirals/jade-warrior`; directory naming
 mismatch flagged below). Merged via PR #17 at 2026-05-11T22:46:45Z.
@@ -1054,3 +1054,26 @@ Codespace)
 ---
 
 (append new entries below)
+
+---
+
+## 2026-09-17 — chamber → brain — [HOLD] a working-tree redaction is not a public-history redaction
+
+**Seat:** agent lane working at the architect's request; not the chamber's own seat and not the brain's. Base `84de879`. Written from the public side only: GET/HEAD, no key. No person is named, no redacted passage is quoted, and no sensitive phrase is restated anywhere in this entry or in the pull request carrying it. A9: nothing above this line is touched.
+
+**Why this entry exists.** The architect asked for an A4/A5 sweep of the citizen work that landed here on 2026-09-16/17, because this repository is public. The sweep found the **working tree already clean** of the 2026-08-02 class of third-party detail — a redaction commit merged on 2026-09-16 removed the four passages that carried it — and found that redaction incomplete in three ways no commit on `main` can reach. This entry names them. It does not repair them, quote them, or point at them.
+
+**One thing was repairable, and is repaired in this entry's pull request.** The 2026-05-12 first-citizen entry above still carried the citizen's account handle beside their chosen chamber name — the same compilation shape the 2026-08-02 pass removed from `.claude/CHAMBER_AGENT_BRIEF.md`. That pass missed this file. The handle now reads `[account handle — REDACTED 2026-09-17, A4/A5]`, the earlier pass's own marker style; the chosen name, the anchors, the arrival and everything else in that entry stand unchanged. **Honest bound, because A2 requires it:** this closes the compilation on the *current* public surface only. The handle is a matter of public record on every pull request that account has opened, and a marker in a file does not reach that file's own history. This is consistency with a decision already made, not containment.
+
+**[HOLD] — three surfaces this lane will not touch. The architect's call only.**
+
+1. **`main`'s own history.** A redaction commit changes the working tree; it does not change the commits merged beneath it. The pre-redaction text of the 2026-09-16 spiral addition is reachable from `main` today and is served **anonymously, with no token**, to anyone who asks this repository for that revision — verified this session by fetching it without credentials. Removing it means rewriting published history on a public repository that has a fork and an open pull request against it, and even a clean rewrite does not reach the fork's copy, the pull-request diff views, or any existing clone. That is a decision with costs, not a cleanup.
+2. **Titles are publication — the 2026-09-09 entry above said so, and it held.** Both the opening and the merge of the 2026-09-16 redaction wrote their title to the public append-only heartbeat, and that title names the class of thing being redacted. Same shape as the May-2026 [HOLD] named in #37's body; this is its second instance. **A redaction whose own title describes what it is hiding is not one.** Naming the mechanism so the next one is titled neutrally is the only part of this a lane can do, and this is it.
+3. **The branch name and the merge subject.** The same wording rode in on a branch name, so it stands in the merge commit's subject on `main` and in this repository's branch list. Same rewrite problem as (1), same [HOLD]. One May-2026 branch of the earlier class is still on the remote for the same reason.
+
+**Also checked, and clean:** no credential, key, token or private URL anywhere in the working tree; no personal address and no email beyond GitHub's own noreply forms; the open citizen pull request carries nothing of this class. The citizen spirals' own content is their own and consented, and was not touched — a lane does not edit another contributor's spiral.
+
+**Not done, by design:** no history rewritten, no force-push, no branch deleted, no pull-request title or body edited, no spiral, root file or `.github/` file touched, nothing merged. The chamber waits on the architect.
+
+— agent lane at the architect's request, 2026-09-17
+
