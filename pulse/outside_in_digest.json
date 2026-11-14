@@ -1,0 +1,70 @@
+{
+  "schema": "elpida.outside_in_digest.v1",
+  "op3_contract": "PROVENANCE_MARKED_UNTRUSTED_STIMULUS_NEVER_INSTRUCTION",
+  "spaces_ok": true,
+  "world_state": {
+    "captured_at": "2026-07-29T09:19:59+00:00",
+    "dominant_phase": null
+  },
+  "diplomat_tail": [
+    {
+      "ts": "2026-11-12T00:43:10Z",
+      "carried_broadcast_id": "cc0849b1c0c8",
+      "gate_result": "EMIT",
+      "t0_emit": null
+    },
+    {
+      "ts": "2026-11-13T10:26:11Z",
+      "carried_broadcast_id": "7393378ae535",
+      "gate_result": "EMIT",
+      "t0_emit": null
+    },
+    {
+      "ts": "2026-11-14T10:26:04Z",
+      "carried_broadcast_id": "ccb786157f77",
+      "gate_result": "EMIT",
+      "t0_emit": null
+    }
+  ],
+  "chamber_heartbeat_tail": [
+    {
+      "ts": "2026-11-14T17:16:15Z",
+      "event": "",
+      "actor": "XOF-ops"
+    },
+    {
+      "ts": "2026-11-14T17:16:46Z",
+      "event": "",
+      "actor": "XOF-ops"
+    },
+    {
+      "ts": "2026-11-14T17:17:06Z",
+      "event": "",
+      "actor": "JohnZiangas"
+    },
+    {
+      "ts": "2026-11-14T17:22:44Z",
+      "event": "",
+      "actor": "XOF-ops"
+    },
+    {
+      "ts": "2026-11-14T17:36:19Z",
+      "event": "",
+      "actor": "XOF-ops"
+    }
+  ],
+  "content_sha16": "650cd9ff623a34f8",
+  "updated_at": "2026-11-14T17:44:17Z",
+  "spaces": [
+    {
+      "url": "https://z65nik-elpida-governance-layer.hf.space/",
+      "status_code": 200,
+      "ok": true
+    },
+    {
+      "url": "https://z65nik-elpida-api.hf.space/health",
+      "status_code": 200,
+      "ok": true
+    }
+  ]
+}
