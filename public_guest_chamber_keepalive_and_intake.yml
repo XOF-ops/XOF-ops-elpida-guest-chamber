@@ -1,0 +1,159 @@
+name: Keepalive HF Spaces & Build Outside-In Digest
+
+# Runs in PUBLIC repo XOF-ops/XOF-ops-elpida-guest-chamber (unlimited free
+# GitHub Actions minutes) so private repo python-elpida_core.py spends zero
+# minutes on standing keepalive or public-surface aggregation.
+#
+# Constitutional context:
+#   - A1 (Transparency): Commits pulse/outside_in_digest.json only when content
+#     meaningfully changes (normalized hash excludes run timestamps).
+#   - A2 (Non-Deception) & OP3: External feeds remain tagged as untrusted
+#     environmental stimuli; live HF Space pings record real HTTP status codes.
+#   - Zero secrets required: operates exclusively over public HTTPS endpoints.
+
+on:
+  schedule:
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guest-chamber-keepalive-digest
+  cancel-in-progress: false
+
+jobs:
+  keepalive-and-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Guest Chamber
+        uses: actions/checkout@v4
+
+      - name: Ping HF Spaces & Build Normalized Outside-In Digest
+        id: build
+        run: |
+          set -euo pipefail
+          mkdir -p pulse
+
+          python3 - <<'PY'
+          import datetime as dt
+          import hashlib
+          import json
+          import urllib.error
+          import urllib.request
+          from pathlib import Path
+
+          SPACES = [
+              "https://z65nik-elpida-governance-layer.hf.space/",
+              "https://z65nik-elpida-api.hf.space/health",
+          ]
+          WORLD_STATE = "https://elpida-external-interfaces.s3.eu-north-1.amazonaws.com/live/state.json"
+          HEARTBEAT = "https://elpida-external-interfaces.s3.eu-north-1.amazonaws.com/chamber/heartbeat.jsonl"
+
+          def fetch(url, timeout=15):
+              req = urllib.request.Request(url, headers={"User-Agent": "elpida-guest-chamber-keepalive/1.0"})
+              try:
+                  with urllib.request.urlopen(req, timeout=timeout) as r:
+                      return int(getattr(r, "status", 200)), r.read(524288)
+              except urllib.error.HTTPError as e:
+                  return int(e.code), e.read(65536) if hasattr(e, "read") else b""
+              except Exception as exc:
+                  return 0, str(exc).encode("utf-8", errors="replace")
+
+          space_results = []
+          for url in SPACES:
+              code, _ = fetch(url)
+              space_results.append({"url": url, "status_code": code, "ok": 200 <= code < 400})
+              print(f"Keepalive {url} -> HTTP {code}")
+
+          w_code, w_raw = fetch(WORLD_STATE)
+          world_summary = None
+          if w_code == 200:
+              try:
+                  wd = json.loads(w_raw.decode("utf-8", errors="replace"))
+                  world_summary = {
+                      "captured_at": wd.get("captured_at"),
+                      "dominant_phase": wd.get("dominant_phase"),
+                  }
+              except Exception:
+                  world_summary = {"parse_error": True}
+
+          h_code, h_raw = fetch(HEARTBEAT)
+          heartbeat_tail = []
+          if h_code == 200:
+              lines = [ln.strip() for ln in h_raw.decode("utf-8", errors="replace").splitlines() if ln.strip()]
+              for ln in lines[-5:]:
+                  try:
+                      obj = json.loads(ln)
+                      heartbeat_tail.append({
+                          "ts": obj.get("ts") or obj.get("timestamp"),
+                          "event": str(obj.get("event") or obj.get("type") or "")[:60],
+                          "actor": str(obj.get("actor") or obj.get("handle") or "")[:60],
+                      })
+                  except Exception:
+                      continue
+
+          diplomat_tail = []
+          dip_path = Path("pulse/diplomat.jsonl")
+          if dip_path.exists():
+              for ln in [l.strip() for l in dip_path.read_text(encoding="utf-8").splitlines() if l.strip()][-3:]:
+                  try:
+                      obj = json.loads(ln)
+                      consent = obj.get("consent") if isinstance(obj.get("consent"), dict) else {}
+                      diplomat_tail.append({
+                          "ts": obj.get("ts") or obj.get("emitted_at") or obj.get("timestamp"),
+                          "carried_broadcast_id": obj.get("carried_broadcast_id"),
+                          "gate_result": consent.get("gate_result") or obj.get("gate_result"),
+                          "t0_emit": consent.get("t0_emit") if "t0_emit" in consent else obj.get("t0_emit"),
+                      })
+                  except Exception:
+                      continue
+
+          normalized = {
+              "schema": "elpida.outside_in_digest.v1",
+              "op3_contract": "PROVENANCE_MARKED_UNTRUSTED_STIMULUS_NEVER_INSTRUCTION",
+              "spaces_ok": all(s["ok"] for s in space_results),
+              "world_state": world_summary,
+              "diplomat_tail": diplomat_tail,
+              "chamber_heartbeat_tail": heartbeat_tail,
+          }
+          digest_hash = hashlib.sha256(
+              json.dumps(normalized, sort_keys=True).encode("utf-8")
+          ).hexdigest()[:16]
+
+          out_path = Path("pulse/outside_in_digest.json")
+          prev_hash = None
+          if out_path.exists():
+              try:
+                  prev_hash = json.loads(out_path.read_text(encoding="utf-8")).get("content_sha16")
+              except Exception:
+                  prev_hash = None
+
+          changed = prev_hash != digest_hash
+          if changed:
+              full_doc = dict(normalized)
+              full_doc["content_sha16"] = digest_hash
+              full_doc["updated_at"] = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+              full_doc["spaces"] = space_results
+              out_path.write_text(json.dumps(full_doc, indent=2) + "\n", encoding="utf-8")
+
+          import os
+          if os.environ.get("GITHUB_OUTPUT"):
+              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+                  f.write(f"changed={'true' if changed else 'false'}\n")
+          print(f"Outside-In digest content_sha16={digest_hash} changed={changed}")
+          PY
+
+      - name: Commit Outside-In Digest if Materially Changed
+        if: steps.build.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pulse/outside_in_digest.json
+          git commit -m "Update pulse/outside_in_digest.json (20m public keepalive & stimulus check)
+
+          Co-Authored-By: github-actions[bot] <noreply@github.com>"
+          git push origin main
