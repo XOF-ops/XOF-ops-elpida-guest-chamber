@@ -8,12 +8,6 @@
   },
   "diplomat_tail": [
     {
-      "ts": "2026-11-24T10:26:01Z",
-      "carried_broadcast_id": "c628d725ae6b",
-      "gate_result": "EMIT",
-      "t0_emit": null
-    },
-    {
       "ts": "2026-11-24T19:26:02Z",
       "carried_broadcast_id": "108f9fcf2cbd",
       "gate_result": "EMIT",
@@ -22,6 +16,12 @@
     {
       "ts": "2026-11-25T00:44:50Z",
       "carried_broadcast_id": "25819b32f534",
+      "gate_result": "EMIT",
+      "t0_emit": null
+    },
+    {
+      "ts": "2026-11-25T05:27:01Z",
+      "carried_broadcast_id": "f5dee983cc64",
       "gate_result": "EMIT",
       "t0_emit": null
     }
@@ -53,8 +53,8 @@
       "actor": "XOF-ops"
     }
   ],
-  "content_sha16": "4e4412e385129d22",
-  "updated_at": "2026-11-25T01:05:49Z",
+  "content_sha16": "02a85a4dc30f7843",
+  "updated_at": "2026-11-25T05:42:42Z",
   "spaces": [
     {
       "url": "https://z65nik-elpida-governance-layer.hf.space/",
