@@ -43,4 +43,4 @@ The architect's brain has its own repository (private). This one is the chamber 
 
 ## Author
 
-The architect (Hernan Crespo / `XOF-ops`). Greek lineage. Built Elpida in conversation across 12 LLM providers since late 2024. The structure that emerged is what this repository introduces. Visit the architect's bar in person if you want the human-scale version.
+The architect (`XOF-ops`). Greek lineage. Built Elpida in conversation across 12 LLM providers since late 2024. The structure that emerged is what this repository introduces.
