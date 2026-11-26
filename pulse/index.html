@@ -346,8 +346,7 @@
     </div>
     <div class="meta">
       <span class="kv">updated <b id="updated-at">—</b></span>
-      <span class="kv">HF Space <b id="space-stage">—</b></span>
-      <span class="kv">snapshot <span id="pathology-pill" class="pathology-pill None">…</span></span>
+      <span class="kv">pathology <span id="pathology-pill" class="pathology-pill None">…</span></span>
       <span class="kv">D15 broadcasts <b id="d15-total">—</b></span>
     </div>
   </header>
@@ -406,13 +405,10 @@
 
 <script>
 const STATE_URL = 'https://elpida-external-interfaces.s3.eu-north-1.amazonaws.com/live/state.json';
-const D15_URL = 'https://elpida-external-interfaces.s3.eu-north-1.amazonaws.com/d15/broadcasts.jsonl';
-const HF_SPACE_URL = 'https://huggingface.co/api/spaces/z65nik/Elpida-Governance-Layer';
-const DIGEST_URL = './outside_in_digest.json';
-const REFRESH_MS = 60_000;
+const REFRESH_MS = 30_000;
 
 let lastSeenCommitHashes = new Set();
-let lastSeenD15Id = null;
+let lastSeenD15Total = null;
 let audioCtx = null;
 let toneOsc = null;
 let toneGain = null;
@@ -420,28 +416,13 @@ let audioOn = false;
 
 function fmtTime(iso) {
   if (!iso) return '—';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return String(iso);
-  return d.toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+  } catch { return iso.slice(11,16); }
 }
 
 function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; }
-
-function clearChildren(el) {
-  while (el && el.firstChild) el.removeChild(el.firstChild);
-}
-
-function makeEl(tag, className, text) {
-  const el = document.createElement(tag);
-  if (className) el.className = className;
-  if (text !== undefined && text !== null) el.textContent = String(text);
-  return el;
-}
-
-function parseD15Cycle(text) {
-  const m = String(text || '').match(/BODY\s+cycle\s+(\d+)/i);
-  return m ? Number(m[1]) : null;
-}
 
 function renderAxioms(state) {
   const all = state.all_axioms || [];
@@ -450,10 +431,11 @@ function renderAxioms(state) {
   const shadow = body.shadow_scores || {};
   const dominant = body.dominant_axiom;
   const winner = body.shadow_winner;
+  const total = Object.values(freq).reduce((a,b) => a + (b||0), 0) || 1;
   const maxLived = Math.max(1, ...Object.values(freq).map(v => v || 0));
 
   const container = document.getElementById('axiom-rows');
-  clearChildren(container);
+  container.innerHTML = '';
   for (const ax of all) {
     const lived = freq[ax] || 0;
     const sh = shadow[ax] || 0;
@@ -464,59 +446,34 @@ function renderAxioms(state) {
     if (lived === 0) row.classList.add('zombie');
     if (ax === dominant) row.classList.add('dominant');
     if (ax === winner) row.classList.add('shadow-winner');
-
-    row.appendChild(makeEl('span', 'axiom-id', ax));
-    const bars = makeEl('span', 'axiom-bars');
-    const shBar = makeEl('span', 'axiom-shadow');
-    shBar.style.width = `${shadowPct}%`;
-    const livedBar = makeEl('span', 'axiom-lived');
-    livedBar.style.width = `${livedPct}%`;
-    bars.appendChild(shBar);
-    bars.appendChild(livedBar);
-    row.appendChild(bars);
-    row.appendChild(makeEl('span', 'axiom-count', lived));
+    row.innerHTML = `
+      <span class="axiom-id">${ax}</span>
+      <span class="axiom-bars">
+        <span class="axiom-shadow" style="width:${shadowPct}%"></span>
+        <span class="axiom-lived" style="width:${livedPct}%"></span>
+      </span>
+      <span class="axiom-count">${lived}</span>
+    `;
     container.appendChild(row);
   }
 }
 
-function renderConvergence(state, liveD15) {
-  const archived = Boolean(state?.tombstone || state?.stale);
-  const bodyCycle = parseD15Cycle(liveD15?.d15_output) ?? state?.body?.cycle ?? null;
-  const mod = bodyCycle !== null ? (bodyCycle % 144) : null;
-  const inCycles = archived && mod !== null ? (mod === 0 ? 0 : 144 - mod) : state?.body?.next_convergence_in;
-  const pct = archived && mod !== null ? Math.round((mod / 144) * 100) : (state?.body?.convergence_progress_pct || 0);
+function renderConvergence(state) {
+  const inCycles = state.body?.next_convergence_in;
+  const pct = state.body?.convergence_progress_pct || 0;
   setText('conv-cycles', inCycles ?? '—');
   document.getElementById('conv-progress-bar').style.width = `${pct}%`;
   const box = document.getElementById('convergence-box');
   box.classList.remove('imminent', 'close');
-  if (inCycles !== null && inCycles !== undefined && inCycles <= 5) box.classList.add('imminent');
-  else if (inCycles !== null && inCycles !== undefined && inCycles <= 20) box.classList.add('close');
+  if (inCycles !== null && inCycles <= 5) box.classList.add('imminent');
+  else if (inCycles !== null && inCycles <= 20) box.classList.add('close');
   const explainer = inCycles === 0
     ? 'CONVERGENCE WINDOW NOW — A11/D15 in rhythm coverage if conditions hold'
-    : 'D15 pipeline window every 144 cycles · MIND coh ≥ 0.85 · post-cooldown';
+    : `D15 pipeline window every 144 cycles · MIND coh ≥ 0.85 · post-cooldown`;
   setText('conv-explainer', explainer);
 }
 
-function renderSpirals(state, liveD15, spaceInfo, digest) {
-  const archived = Boolean(state?.tombstone || state?.stale);
-  const bodyCycle = parseD15Cycle(liveD15?.d15_output);
-  if (archived) {
-    setText('mind-cycle', liveD15 ? 'LIVE' : (state?.mind?.cycle ?? '—'));
-    setText('mind-sub', liveD15
-      ? `contributed via D15 · ${fmtTime(liveD15.timestamp)}`
-      : `ARCHIVED SNAPSHOT (${fmtTime(state?.captured_at)})`);
-    setText('body-cycle', bodyCycle ?? '—');
-    const verdict = liveD15?.governance?.verdict || '—';
-    const approval = liveD15?.governance?.approval_rate ?? '—';
-    setText('body-sub', spaceInfo
-      ? `HF ${spaceInfo.runtime?.stage || 'UNKNOWN'} · verdict ${verdict} · approval ${approval}`
-      : `verdict ${verdict} · approval ${approval}`);
-    setText('head-cycle', digest?.diplomat_tail?.length ?? (state?.head?.orchestration_cycles ?? '—'));
-    setText('head-sub', digest?.updated_at
-      ? `digest ${fmtTime(digest.updated_at)}`
-      : `ARCHIVED (${fmtTime(state?.captured_at)})`);
-    return;
-  }
+function renderSpirals(state) {
   setText('mind-cycle', state.mind?.cycle ?? '—');
   setText('mind-sub', state.mind?.rhythm
     ? `${state.mind.rhythm} · coh ${(state.mind.coherence ?? 0).toFixed?.(2) ?? '—'}`
@@ -529,90 +486,67 @@ function renderSpirals(state, liveD15, spaceInfo, digest) {
   setText('head-sub', state.head?.current_state ?? 'dormant');
 }
 
-function renderHeader(state, liveD15, spaceInfo, digest) {
-  const sha = spaceInfo?.runtime?.sha ? spaceInfo.runtime.sha.slice(0, 8) : null;
-  setText('identity-hash', sha ? `· space ${sha} ·` : (state?.head?.identity_hash ? `· ${state.head.identity_hash} ·` : '…'));
-  const latestIso = liveD15?.timestamp || digest?.updated_at || state?.captured_at;
-  setText('updated-at', fmtTime(latestIso));
-  setText('d15-total', liveD15?.broadcast_id ? `latest ${liveD15.broadcast_id}` : (state?.d15_total_broadcasts ?? '—'));
-
-  const stage = spaceInfo?.runtime?.stage || 'unavailable';
-  const spaceMod = spaceInfo?.lastModified ? fmtTime(spaceInfo.lastModified) : '—';
-  setText('space-stage', `${stage} (${spaceMod})`);
+function renderHeader(state) {
+  setText('identity-hash', state.head?.identity_hash ? `· ${state.head.identity_hash} ·` : '…');
+  setText('updated-at', fmtTime(state.captured_at));
+  setText('d15-total', state.d15_total_broadcasts ?? '—');
 
   const pill = document.getElementById('pathology-pill');
-  if (state?.tombstone || state?.stale) {
-    pill.className = 'pathology-pill WARNING';
-    pill.textContent = `ARCHIVED SNAPSHOT (${fmtTime(state.captured_at)})`;
-  } else {
-    const ph = state?.body?.pathology_health || 'None';
-    pill.className = 'pathology-pill ' + ph;
-    pill.textContent = ph;
-  }
+  const ph = state.body?.pathology_health || 'None';
+  pill.className = 'pathology-pill ' + ph;
+  pill.textContent = ph;
 }
 
-function renderD15(state, liveD15) {
-  const d = liveD15 || state?.latest_d15;
+function renderD15(state) {
+  const d = state.latest_d15;
   if (!d || d.error) {
     setText('d15-text', '— no D15 data —');
     return;
   }
   const ax = (d.axioms_in_tension || []).join(' · ') || 'none';
-  setText('d15-axiom-pill', ax);
-  setText('d15-text', d.d15_output || d.text_excerpt || '');
-  const verdict = d.governance?.verdict || d.verdict || '—';
-  const approval = d.governance?.approval_rate ?? d.approval_rate ?? '—';
-  const meta = `id ${d.broadcast_id || '—'} · ${fmtTime(d.timestamp)} · verdict ${verdict} · approval ${approval}`;
+  document.getElementById('d15-axiom-pill').textContent = ax;
+  setText('d15-text', d.text_excerpt || '');
+  const meta = `id ${d.broadcast_id || '—'} · ${fmtTime(d.timestamp)} · verdict ${d.verdict || '—'} · approval ${d.approval_rate ?? '—'}`;
   setText('d15-meta', meta);
 }
 
-function renderStream(state, digest) {
+function renderStream(state) {
   const list = document.getElementById('stream-list');
-  const diplomatRows = (digest?.diplomat_tail || []).slice().reverse().map(d => ({
-    hash: `dip-${d.ts}-${d.carried_broadcast_id}`,
-    iso: d.ts,
-    subject: `Diplomat carried ${d.carried_broadcast_id || '—'} (${d.gate_result || '—'})`,
-    agent: 'DIPLOMAT',
-    color: 'var(--accent-3)',
-  }));
-  const spaceRows = (digest?.spaces || []).map(s => ({
-    hash: `sp-${s.url}-${s.status_code}`,
-    iso: digest?.updated_at,
-    subject: `${s.url} -> HTTP ${s.status_code}`,
-    agent: s.ok ? 'OK' : 'DOWN',
-    color: s.ok ? 'var(--ok)' : 'var(--danger)',
-  }));
-  const commits = diplomatRows.length > 0 ? [...diplomatRows, ...spaceRows] : (state?.recent_commits || []);
-  clearChildren(list);
-  if (commits.length === 0) {
-    list.appendChild(makeEl('div', 'loading', 'no telemetry yet'));
-    return;
-  }
+  const commits = state.recent_commits || [];
+  if (commits.length === 0) { list.innerHTML = '<div class="loading">no commits yet</div>'; return; }
   const newHashes = new Set();
+  list.innerHTML = '';
   for (const c of commits) {
     if (c.error) continue;
     newHashes.add(c.hash);
     const isNew = lastSeenCommitHashes.size > 0 && !lastSeenCommitHashes.has(c.hash);
-    const item = makeEl('div', 'stream-item' + (isNew ? ' new' : ''));
+    const item = document.createElement('div');
+    item.className = 'stream-item' + (isNew ? ' new' : '');
     item.style.borderLeftColor = c.color || 'var(--fg-dim)';
-    item.appendChild(makeEl('span', 'ts', fmtTime(c.iso)));
-    item.appendChild(makeEl('span', 'subj', c.subject || ''));
-    item.appendChild(makeEl('span', 'agent', c.agent || ''));
+    item.innerHTML = `
+      <span class="ts">${fmtTime(c.iso)}</span>
+      <span class="subj">${escapeHtml(c.subject)}</span>
+      <span class="agent">${c.agent}</span>
+    `;
     list.appendChild(item);
   }
   lastSeenCommitHashes = newHashes;
 }
 
-function checkD15Fired(state, liveD15) {
-  const d = liveD15 || state?.latest_d15;
-  const bid = d?.broadcast_id || null;
-  if (lastSeenD15Id !== null && bid && bid !== lastSeenD15Id) {
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function checkD15Fired(state) {
+  const total = state.d15_total_broadcasts;
+  if (lastSeenD15Total !== null && total > lastSeenD15Total) {
+    // New D15 fired — flash + chord
     flashScreen();
-    const ax = (d?.axioms_in_tension || [])[0];
-    const hz = state?.axiom_hz?.[ax];
+    const ax = (state.latest_d15?.axioms_in_tension || [])[0];
+    const hz = state.axiom_hz?.[ax];
     if (hz && audioOn) playChord(hz);
   }
-  if (bid) lastSeenD15Id = bid;
+  lastSeenD15Total = total;
 }
 
 function flashScreen() {
@@ -620,6 +554,7 @@ function flashScreen() {
   el.style.cssText = 'position:fixed;inset:0;background:rgba(255,212,90,0.18);pointer-events:none;z-index:99;animation:fade-out 1s forwards';
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 1100);
+  // inject the keyframes if not already present
   if (!document.getElementById('flash-style')) {
     const s = document.createElement('style');
     s.id = 'flash-style';
@@ -674,55 +609,28 @@ document.getElementById('audio-toggle').addEventListener('click', () => {
   document.getElementById('audio-toggle').classList.toggle('on', audioOn);
   if (audioOn) {
     ensureAudio();
-    setToneVolume(0.025);
+    setToneVolume(0.025); // very soft drone
   } else {
     setToneVolume(0);
   }
 });
 
-async function fetchLatestD15() {
-  try {
-    const resp = await fetch(D15_URL, {
-      headers: { Range: 'bytes=-65536' },
-      cache: 'no-store',
-    });
-    if (!resp.ok) return null;
-    const txt = await resp.text();
-    const lines = txt.split('\n').filter(l => l.trim().startsWith('{'));
-    for (let i = lines.length - 1; i >= 0; i--) {
-      try { return JSON.parse(lines[i]); } catch {}
-    }
-  } catch (e) {
-    console.warn('D15 fetch failed (falling back to digest)', e);
-  }
-  return null;
-}
-
-async function fetchJsonOrNull(url) {
-  try {
-    const r = await fetch(url, { cache: 'no-store' });
-    return r.ok ? await r.json() : null;
-  } catch { return null; }
-}
-
 async function tick() {
   try {
-    const [state, liveD15, spaceInfo, digest] = await Promise.all([
-      fetchJsonOrNull(STATE_URL + '?t=' + Date.now()),
-      fetchLatestD15(),
-      fetchJsonOrNull(HF_SPACE_URL),
-      fetchJsonOrNull(DIGEST_URL + '?t=' + Date.now()),
-    ]);
+    const r = await fetch(STATE_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const state = await r.json();
 
-    renderHeader(state, liveD15, spaceInfo, digest);
-    renderSpirals(state, liveD15, spaceInfo, digest);
-    if (state) renderAxioms(state);
-    renderConvergence(state, liveD15);
-    renderD15(state, liveD15);
-    renderStream(state, digest);
-    checkD15Fired(state, liveD15);
+    renderHeader(state);
+    renderSpirals(state);
+    renderAxioms(state);
+    renderConvergence(state);
+    renderD15(state);
+    renderStream(state);
+    checkD15Fired(state);
 
-    if (audioOn && state) {
+    // Set tone to dominant axiom Hz
+    if (audioOn) {
       const ax = state.body?.dominant_axiom || 'A1';
       const hz = state.axiom_hz?.[ax] || 432;
       setTone(hz);
